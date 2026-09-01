@@ -37,6 +37,19 @@ fi
 
 mkdir -p -- "$(dirname -- "${output}")"
 
+if ! make --silent -C "${SCRIPT_DIR}" checkandroidsdk; then
+  cat >&2 <<'EOF'
+
+MeWeVPN requires the Android SDK and NDK before it can build.
+Install the pinned build dependencies with:
+
+  make androidsdk
+
+Then rerun build-apk.sh.
+EOF
+  exit 1
+fi
+
 echo "Building MeWeVPN APK..."
 make -C "${SCRIPT_DIR}" apk
 

@@ -127,6 +127,12 @@ For the M-WE distribution, the convenience wrapper builds the same complete APK
 Pass an output path as the only argument to choose a different destination, for
 example `./build-apk.sh out/MeWeVPN.apk`.
 
+The first build downloads the pinned Tailscale Go toolchain (currently roughly
+60 MB). Interrupted downloads are retained and resumed automatically; rerun the
+same command if the network is unavailable for longer than the retry window.
+The wrapper checks for the required Android NDK before starting and directs you
+to `make androidsdk` when the SDK packages have not yet been installed.
+
 For one-shot commands without entering an interactive shell:
 
 ```sh
