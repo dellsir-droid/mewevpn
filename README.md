@@ -117,21 +117,27 @@ make tailscale-debug
 
 The debug APK is written to `./tailscale-debug.apk`.
 
-For the M-WE distribution, the convenience wrapper builds the same complete APK
-(including `libtailscale`) and copies it to `./MeWeVPN-debug.apk`:
+For the M-WE distribution, run the interactive builder:
 
 ```shell
 ./build-apk.sh
 ```
 
-Pass an output path as the only argument to choose a different destination, for
-example `./build-apk.sh out/MeWeVPN.apk`.
+Its menu can install the Android SDK/NDK, build the complete APK (including
+`libtailscale`), display the selected build environment, or clean generated
+files. When a system SDK is incomplete (for example, it has no `sdkmanager`),
+the script automatically installs and reuses an ignored repo-local SDK at
+`./android-sdk`.
 
-The first build downloads the pinned Tailscale Go toolchain (currently roughly
-60 MB). Interrupted downloads are retained and resumed automatically; rerun the
-same command if the network is unavailable for longer than the retry window.
-The wrapper checks for the required Android NDK before starting and directs you
-to `make androidsdk` when the SDK packages have not yet been installed.
+For non-interactive use, missing SDK packages are installed automatically:
+
+```shell
+./build-apk.sh build out/MeWeVPN.apk
+```
+
+The older `./build-apk.sh out/MeWeVPN.apk` form remains supported. The first
+build also downloads the pinned Tailscale Go toolchain (currently roughly 60
+MB). Interrupted downloads are retained and resumed automatically.
 
 For one-shot commands without entering an interactive shell:
 

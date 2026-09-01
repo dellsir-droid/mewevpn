@@ -328,7 +328,9 @@ $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager:
 	mkdir -p $(ANDROID_HOME)/tmp
 	mkdir -p $(ANDROID_HOME)/cmdline-tools
 	(cd $(ANDROID_HOME)/tmp && \
-		curl --silent -O -L $(ANDROID_TOOLS_URL) && \
+		curl --http1.1 --fail --location --continue-at - \
+			--retry 8 --retry-all-errors --retry-delay 5 \
+			--connect-timeout 30 --remote-name $(ANDROID_TOOLS_URL) && \
 		echo $(ANDROID_TOOLS_SUM) | shasum -c - && \
 		unzip $(shell basename $(ANDROID_TOOLS_URL)))
 	mv $(ANDROID_HOME)/tmp/cmdline-tools $(ANDROID_HOME)/cmdline-tools/latest
