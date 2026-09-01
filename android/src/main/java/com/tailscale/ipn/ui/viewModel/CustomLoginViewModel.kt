@@ -28,27 +28,3 @@ class LoginWithAuthKeyViewModel : CustomLoginViewModel() {
     }
   }
 }
-
-class LoginWithCustomControlURLViewModel : CustomLoginViewModel() {
-  // Sets the custom control URL and invokes the login flow
-  fun setControlURL(urlStr: String, onSuccess: () -> Unit) {
-    // Some basic checks that the entered URL is "reasonable".  The underlying
-    // localAPIClient will use the default server if we give it a broken URL,
-    // but we can make sure we can construct a URL from the input string and
-    // ensure it has an http/https scheme
-    when (urlStr.startsWith("http", ignoreCase = true) &&
-        urlStr.contains("://") &&
-        urlStr.length > 7) {
-      false -> {
-        errorDialog.set(ErrorDialogType.INVALID_CUSTOM_URL)
-        return
-      }
-      true -> {
-        loginWithCustomControlURL(urlStr) {
-          it.onFailure { errorDialog.set(ErrorDialogType.ADD_PROFILE_FAILED) }
-          it.onSuccess { onSuccess() }
-        }
-      }
-    }
-  }
-}

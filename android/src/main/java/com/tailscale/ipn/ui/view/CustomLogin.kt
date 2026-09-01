@@ -34,7 +34,6 @@ import com.tailscale.ipn.R
 import com.tailscale.ipn.ui.theme.listItem
 import com.tailscale.ipn.ui.util.set
 import com.tailscale.ipn.ui.viewModel.LoginWithAuthKeyViewModel
-import com.tailscale.ipn.ui.viewModel.LoginWithCustomControlURLViewModel
 
 data class LoginViewStrings(
     var title: String,
@@ -42,38 +41,6 @@ data class LoginViewStrings(
     var inputTitle: String,
     var placeholder: String,
 )
-
-@Composable
-fun LoginWithCustomControlURLView(
-    onNavigateHome: BackNavigation,
-    backToSettings: BackNavigation,
-    viewModel: LoginWithCustomControlURLViewModel = LoginWithCustomControlURLViewModel()
-) {
-
-  Scaffold(
-      topBar = {
-        Header(
-            R.string.add_account,
-            onBack = backToSettings,
-        )
-      }) { innerPadding ->
-        val error by viewModel.errorDialog.collectAsState()
-        val strings =
-            LoginViewStrings(
-                title = stringResource(id = R.string.custom_control_menu),
-                explanation = stringResource(id = R.string.custom_control_menu_desc),
-                inputTitle = stringResource(id = R.string.custom_control_url_title),
-                placeholder = stringResource(id = R.string.custom_control_placeholder),
-            )
-
-        error?.let { ErrorDialog(type = it, action = { viewModel.errorDialog.set(null) }) }
-
-        LoginView(
-            innerPadding = innerPadding,
-            strings = strings,
-            onSubmitAction = { viewModel.setControlURL(it, onNavigateHome) })
-      }
-}
 
 @Composable
 fun LoginWithAuthKeyView(

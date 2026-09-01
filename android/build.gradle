@@ -37,6 +37,7 @@ android {
     ndkVersion "23.1.7779620"
     compileSdkVersion androidApiLevel
     defaultConfig {
+        applicationId "org.mwe.vpn"
         minSdkVersion 26
         targetSdkVersion androidApiLevel
 

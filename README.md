@@ -1,4 +1,11 @@
-# Tailscale Android Client
+# MeWeVPN Android Client
+
+> **M-WE distribution:** This branch builds **MeWeVPN** (`org.mwe.vpn`; Android application IDs cannot contain hyphens), a private-network
+> Android client pinned to the M-WE Headscale control server at `https://hs.m-we.org`. Interactive
+> authentication begins at Headscale; Headscale must be configured to use the OpenID Connect issuer
+> `https://oidc.m-we.org`. The Android client does not handle the OIDC client secret and must never
+> embed it. The upstream Tailscale networking implementation and BSD-3-Clause licensing remain
+> intact.
 
 https://tailscale.com
 
@@ -109,6 +116,16 @@ make tailscale-debug
 ```
 
 The debug APK is written to `./tailscale-debug.apk`.
+
+For the M-WE distribution, the convenience wrapper builds the same complete APK
+(including `libtailscale`) and copies it to `./MeWeVPN-debug.apk`:
+
+```shell
+./build-apk.sh
+```
+
+Pass an output path as the only argument to choose a different destination, for
+example `./build-apk.sh out/MeWeVPN.apk`.
 
 For one-shot commands without entering an interactive shell:
 

@@ -72,7 +72,6 @@ import com.tailscale.ipn.ui.view.HealthView
 import com.tailscale.ipn.ui.view.IntroView
 import com.tailscale.ipn.ui.view.LoginQRView
 import com.tailscale.ipn.ui.view.LoginWithAuthKeyView
-import com.tailscale.ipn.ui.view.LoginWithCustomControlURLView
 import com.tailscale.ipn.ui.view.MDMSettingsDebugView
 import com.tailscale.ipn.ui.view.MainView
 import com.tailscale.ipn.ui.view.MainViewNavigation
@@ -327,9 +326,6 @@ class MainActivity : ComponentActivity() {
                       UserSwitcherNav(
                           backToSettings = backTo("settings"),
                           onNavigateHome = backTo("main"),
-                          onNavigateCustomControl = {
-                            navController.navigate("loginWithCustomControl")
-                          },
                           onNavigateToAuthKey = { navController.navigate("loginWithAuthKey") })
 
                   composable("main", enterTransition = { fadeIn(animationSpec = tween(150)) }) {
@@ -397,10 +393,6 @@ class MainActivity : ComponentActivity() {
                   }
                   composable("loginWithAuthKey") {
                     LoginWithAuthKeyView(onNavigateHome = backTo("main"), backTo("userSwitcher"))
-                  }
-                  composable("loginWithCustomControl") {
-                    LoginWithCustomControlURLView(
-                        onNavigateHome = backTo("main"), backTo("userSwitcher"))
                   }
                 }
             if (isIntroScreenViewedSet()) {
