@@ -15,8 +15,8 @@ Build the MeWeVPN debug APK, including the Go networking library.
 Usage:
   ./build-apk.sh                         Open the interactive build menu
   ./build-apk.sh menu                    Open the menu explicitly
-  ./build-apk.sh build [OUTPUT_APK]      Install missing SDK packages and build
-  ./build-apk.sh install-sdk             Install/update Android SDK packages
+  ./build-apk.sh build [OUTPUT_APK]      Build after packages have been installed
+  ./build-apk.sh install-sdk             Install required Android build packages
   ./build-apk.sh clean                   Remove generated build artifacts
   ./build-apk.sh [OUTPUT_APK]            Build directly (backward compatible)
 
@@ -47,11 +47,14 @@ sdk_is_ready() {
   make --silent -C "${SCRIPT_DIR}" checkandroidsdk >/dev/null 2>&1
 }
 
-ensure_sdk() {
+require_sdk() {
   configure_android_sdk
   if ! sdk_is_ready; then
-    echo "The required Android SDK/NDK packages are missing; installing them now."
-    install_sdk
+    cat >&2 <<'EOF'
+The required Android SDK/NDK packages are not installed.
+Run ./build-apk.sh and choose option 1, then choose option 2 to build the APK.
+EOF
+    return 1
   fi
 }
 
@@ -62,7 +65,7 @@ build_apk() {
   fi
 
   mkdir -p -- "$(dirname -- "${output}")"
-  ensure_sdk
+  require_sdk
 
   echo "Building MeWeVPN APK..."
   make -C "${SCRIPT_DIR}" apk
@@ -87,21 +90,18 @@ menu() {
     cat <<'MENU'
 
 MeWeVPN APK Builder
-  1) Install dependencies and build APK
-  2) Install/update Android SDK and NDK
-  3) Build APK
-  4) Show build environment
-  5) Clean build artifacts
-  6) Exit
+  1) Install required packages
+  2) Make the APK
+  3) Exit
 MENU
-    read -r -p 'Select an option [1-6]: ' choice
+    read -r -p 'Select an option [1-3]: ' choice
     case "${choice}" in
-      1) install_sdk; build_apk "${DEFAULT_OUTPUT}" ;;
-      2) install_sdk ;;
-      3) build_apk "${DEFAULT_OUTPUT}" ;;
-      4) show_environment ;;
-      5) make -C "${SCRIPT_DIR}" clean ;;
-      6) return ;;
+      1) install_sdk ;;
+      2)
+        read -r -p "Output APK [${DEFAULT_OUTPUT}]: " output
+        build_apk "${output:-${DEFAULT_OUTPUT}}"
+        ;;
+      3) return ;;
       *) echo "Invalid selection: ${choice}" >&2 ;;
     esac
   done

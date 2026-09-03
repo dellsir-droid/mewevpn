@@ -336,16 +336,16 @@ $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager:
 
 .PHONY: androidsdk
 androidsdk: $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager ## Install the set of Android SDK packages we need.
-	yes | $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null
-	$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --update
-	$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager $(ANDROID_SDK_PACKAGES)
+	yes | $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --sdk_root=$(ANDROID_HOME) --licenses
+	$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --sdk_root=$(ANDROID_HOME) $(ANDROID_SDK_PACKAGES)
 
 # Normally in make you would simply take a dependency on the task that provides
 # the binaries, however users may have a decision to make as to whether they
 # want to install an SDK or use the one from an Android Studio installation.
 .PHONY: checkandroidsdk
 checkandroidsdk: ## Check that Android SDK is installed
-	@$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --list_installed | grep -q 'ndk' || (\
+	@test -x $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager && \
+		test -d $(ANDROID_HOME)/ndk/23.1.7779620 || (\
 		echo -e "\n\tERROR: Android SDK not installed.\n\
 		\tANDROID_HOME=$(ANDROID_HOME)\n\
 		\tANDROID_SDK_ROOT=$(ANDROID_SDK_ROOT)\n\n\
