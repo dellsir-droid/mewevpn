@@ -123,16 +123,17 @@ For the M-WE distribution, run the interactive builder:
 ./build-apk.sh
 ```
 
-Choose **1) Install required packages** once, followed by **2) Make the APK**.
-The second option asks for an output path and builds the complete APK, including
-`libtailscale`. When a system SDK is incomplete (for example, it has no
-`sdkmanager`), the script installs and reuses an ignored repo-local SDK at
-`./android-sdk`.
+Choose **1) Install required packages** once. This installs a compatible JDK and
+host utilities through the detected package manager, then installs the Android
+SDK/NDK. Choose **2) Make the APK** afterward. The APK option asks for an output
+path and builds the complete APK, including `libtailscale`. When a system SDK is
+incomplete (for example, it has no `sdkmanager`), the script installs and reuses
+an ignored repo-local SDK at `./android-sdk`.
 
 For non-interactive use, install the packages and build in separate commands:
 
 ```shell
-./build-apk.sh install-sdk
+./build-apk.sh install
 ./build-apk.sh build out/MeWeVPN.apk
 ```
 

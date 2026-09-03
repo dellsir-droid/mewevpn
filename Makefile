@@ -60,10 +60,10 @@ ABS_UNSTRIPPED_AAR := $(shell pwd)/$(UNSTRIPPED_AAR)
 # Android SDK & Tools settings.
 ifeq ($(shell uname),Linux)
     ANDROID_TOOLS_URL := "https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip"
-    ANDROID_TOOLS_SUM := "bd1aa17c7ef10066949c88dc6c9c8d536be27f992a1f3b5a584f9bd2ba5646a0  commandlinetools-linux-9477386_latest.zip"
+    ANDROID_TOOLS_SHA256 := bd1aa17c7ef10066949c88dc6c9c8d536be27f992a1f3b5a584f9bd2ba5646a0
 else
     ANDROID_TOOLS_URL := "https://dl.google.com/android/repository/commandlinetools-mac-9477386_latest.zip"
-    ANDROID_TOOLS_SUM := "2072ffce4f54cdc0e6d2074d2f381e7e579b7d63e915c220b96a7db95b2900ee  commandlinetools-mac-9477386_latest.zip"
+    ANDROID_TOOLS_SHA256 := 2072ffce4f54cdc0e6d2074d2f381e7e579b7d63e915c220b96a7db95b2900ee
 endif
 ANDROID_SDK_PACKAGES := 'platforms;android-$(ANDROID_API_LEVEL)' 'extras;android;m2repository' 'ndk;23.1.7779620' 'platform-tools' 'build-tools;$(ANDROID_BUILD_TOOLS_VERSION)'
 
@@ -329,7 +329,7 @@ $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager:
 	mkdir -p $(ANDROID_HOME)/cmdline-tools
 	(cd $(ANDROID_HOME)/tmp && \
 		$(CURDIR)/scripts/download-file.sh $(ANDROID_TOOLS_URL) $(shell basename $(ANDROID_TOOLS_URL)) && \
-		echo $(ANDROID_TOOLS_SUM) | shasum -c - && \
+		$(CURDIR)/scripts/check-sha256.sh $(ANDROID_TOOLS_SHA256) $(shell basename $(ANDROID_TOOLS_URL)) && \
 		unzip $(shell basename $(ANDROID_TOOLS_URL)))
 	mv $(ANDROID_HOME)/tmp/cmdline-tools $(ANDROID_HOME)/cmdline-tools/latest
 	rm -rf $(ANDROID_HOME)/tmp
