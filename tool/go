@@ -60,13 +60,9 @@ if [[ -z "${TOOLCHAINDIR}" ]]; then
             # The toolchain archive is large and GitHub/CDN HTTP/2 connections can be reset on
             # slower links. Force HTTP/1.1, retain a partial archive, and retry transient failures
             # so rerunning build-apk.sh does not restart the download from zero.
-            curl --http1.1 \
-                --fail --location \
-                --continue-at - \
-                --retry 8 --retry-all-errors --retry-delay 5 \
-                --connect-timeout 30 \
-                --output "$toolchain.tar.gz" \
-                "https://github.com/tailscale/go/releases/download/build-${REV}/${HOST_OS}-${HOST_ARCH}.tar.gz"
+            "${tsandroid}/scripts/download-file.sh" \
+                "https://github.com/tailscale/go/releases/download/build-${REV}/${HOST_OS}-${HOST_ARCH}.tar.gz" \
+                "$toolchain.tar.gz"
             mkdir -p "$toolchain"
             (cd "$toolchain" && tar --strip-components=1 -xf "$toolchain.tar.gz")
             echo "$REV" >"$toolchain.extracted"

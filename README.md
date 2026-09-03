@@ -137,7 +137,9 @@ For non-interactive use, missing SDK packages are installed automatically:
 
 The older `./build-apk.sh out/MeWeVPN.apk` form remains supported. The first
 build also downloads the pinned Tailscale Go toolchain (currently roughly 60
-MB). Interrupted downloads are retained and resumed automatically.
+MB). Android and Go package downloads retain partial files and resume them in a
+new connection after interruptions. The retry count and delay can be adjusted
+with `DOWNLOAD_MAX_ATTEMPTS` and `DOWNLOAD_RETRY_DELAY`.
 
 For one-shot commands without entering an interactive shell:
 
