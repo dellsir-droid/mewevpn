@@ -12,7 +12,7 @@ tsandroid=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd 
 
 # Allow TOOLCHAINDIR to be overridden, as a special case for the fdroid build
 if [[ -z "${TOOLCHAINDIR}" ]]; then
-    toolchain="$HOME/.cache/tailscale-go"
+    toolchain="${TAILSCALE_TOOLCHAIN_CACHE:-$HOME/.cache/tailscale-go}"
 
     if [[ -d "$toolchain" ]]; then
         # A toolchain exists, but is it recent enough to compile gocross? If not,

@@ -126,7 +126,7 @@ For the M-WE distribution, run the interactive builder:
 Choose **1) Install required packages** once. This installs a compatible JDK and
 host utilities through the detected package manager, then installs the Android
 SDK/NDK. Choose **2) Make the APK** afterward. The APK option asks for an output
-path and builds the complete APK, including `libtailscale`. When a system SDK is
+path (default `./tmp/MeWeVPN-debug.apk`) and builds the complete APK, including `libtailscale`. When a system SDK is
 incomplete (for example, it has no `sdkmanager`), the script installs and reuses
 an ignored repo-local SDK at `./android-sdk`.
 
@@ -142,6 +142,11 @@ build also downloads the pinned Tailscale Go toolchain (currently roughly 60
 MB). Android and Go package downloads retain partial files and resume them in a
 new connection after interruptions. The retry count and delay can be adjusted
 with `DOWNLOAD_MAX_ATTEMPTS` and `DOWNLOAD_RETRY_DELAY`.
+
+Downloaded Gradle, Go modules, and the pinned Go toolchain are stored under the
+Git-ignored `./tmp/package` directory. Successful downloads and extracted
+Gradle distributions are reused by later builds. Menu option 4 cleans build
+outputs without removing this cache; option 5 explicitly deletes the cache.
 
 For one-shot commands without entering an interactive shell:
 

@@ -19,6 +19,7 @@ DOCKER_IMAGE := tailscale-android-build-amd64-072226-3
 # tailscale-android-integration-amd64-YYYYMMDD-N
 ANDROID_INTEGRATION_DOCKER_IMAGE := tailscale-android-integration-amd64-20260609-1
 export TS_USE_TOOLCHAIN=1
+GRADLE ?= ./gradlew
 
 # If set, additional comma-separated build tags passed to the libtailscale Go
 # build to control feature selection.
@@ -152,7 +153,7 @@ apk: $(DEBUG_APK)
 tailscale-debug: $(DEBUG_APK)
 
 $(DEBUG_APK): libtailscale debug-symbols version gradle-dependencies build-unstripped-aar
-	(cd android && ./gradlew test assembleDebug)
+	(cd android && $(GRADLE) test assembleDebug)
 	install -C android/build/outputs/apk/debug/android-debug.apk $@
 
 # Builds the release AAB and signs it (phone/tablet/chromeOS variant)
@@ -171,7 +172,7 @@ gradle-dependencies: $(shell find android -type f -not -path "android/build/*" -
 
 $(RELEASE_AAB): version gradle-dependencies
 	@echo "Building release AAB"
-	(cd android && ./gradlew test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE))
+	(cd android && $(GRADLE) test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE))
 	install -C ./android/build/outputs/bundle/release/android-release.aab $@
 
 # PLATFORM=tv signals to Gradle that we should build for AndroidTV. Gradle
@@ -179,11 +180,11 @@ $(RELEASE_AAB): version gradle-dependencies
 # builds use ...0 and TV builds use ...1.
 $(RELEASE_TV_AAB): version gradle-dependencies
 	@echo "Building TV release AAB"
-	(cd android && ./gradlew test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE) -PPLATFORM=tv)
+	(cd android && $(GRADLE) test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE) -PPLATFORM=tv)
 	install -C ./android/build/outputs/bundle/release/android-release.aab $@
 
 tailscale-test.apk: version gradle-dependencies
-	(cd android && ./gradlew assembleApplicationTestAndroidTest)
+	(cd android && $(GRADLE) assembleApplicationTestAndroidTest)
 	install -C ./android/build/outputs/apk/androidTest/applicationTest/android-applicationTest-androidTest.apk $@
 
 # Command that (re)generates tailscale.version from the current git HEAD and
@@ -357,15 +358,15 @@ checkandroidsdk: ## Check that Android SDK is installed
 
 .PHONY: test
 test: gradle-dependencies ## Run the Android tests
-	(cd android && ./gradlew test)
+	(cd android && $(GRADLE) test)
 
 .PHONY: fmt
 fmt: gradle-dependencies ## Format the Android code
-	(cd android && ./gradlew ktfmtFormat)
+	(cd android && $(GRADLE) ktfmtFormat)
 
 .PHONY: fmt-check
 fmt-check: gradle-dependencies ## Check the Android code is formatted
-	(cd android && ./gradlew ktfmtCheck)
+	(cd android && $(GRADLE) ktfmtCheck)
 
 .PHONY: emulator
 emulator: ## Start an android emulator instance

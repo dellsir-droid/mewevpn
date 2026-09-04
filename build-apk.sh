@@ -5,7 +5,9 @@
 set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-readonly DEFAULT_OUTPUT="${SCRIPT_DIR}/MeWeVPN-debug.apk"
+readonly TMP_DIR="${SCRIPT_DIR}/tmp"
+readonly PACKAGE_CACHE="${TMP_DIR}/package"
+readonly DEFAULT_OUTPUT="${TMP_DIR}/MeWeVPN-debug.apk"
 readonly LOCAL_ANDROID_SDK="${SCRIPT_DIR}/android-sdk"
 
 usage() {
@@ -35,6 +37,23 @@ configure_android_sdk() {
     export ANDROID_SDK_ROOT="${MWE_ANDROID_SDK_ROOT:-${LOCAL_ANDROID_SDK}}"
   fi
   export ANDROID_HOME="${ANDROID_SDK_ROOT}"
+}
+
+configure_build_cache() {
+  export GRADLE_USER_HOME="${PACKAGE_CACHE}/gradle-home"
+  export GOPATH="${PACKAGE_CACHE}/go"
+  export GOMODCACHE="${GOPATH}/pkg/mod"
+  export GOCACHE="${PACKAGE_CACHE}/go-build"
+  export TAILSCALE_TOOLCHAIN_CACHE="${PACKAGE_CACHE}/tailscale-go"
+  mkdir -p "${GRADLE_USER_HOME}" "${GOMODCACHE}" "${GOCACHE}"
+
+  local gradle_bin
+  gradle_bin="$(find "${PACKAGE_CACHE}" -maxdepth 3 -type f -path '*/bin/gradle' -print -quit 2>/dev/null || true)"
+  if [[ -n "${gradle_bin}" ]]; then
+    export GRADLE="${gradle_bin}"
+  else
+    unset GRADLE || true
+  fi
 }
 
 configure_java() {
@@ -127,8 +146,35 @@ install_sdk() {
   make -C "${SCRIPT_DIR}" androidsdk
 }
 
+install_gradle() {
+  local properties="${SCRIPT_DIR}/android/gradle/wrapper/gradle-wrapper.properties"
+  local url checksum archive version_dir
+  url="$(sed -n 's/^distributionUrl=//p' "${properties}" | sed 's/\\:/:/')"
+  checksum="$(sed -n 's/^distributionSha256Sum=//p' "${properties}")"
+  archive="${PACKAGE_CACHE}/${url##*/}"
+  version_dir="${PACKAGE_CACHE}/${archive##*/}"
+  version_dir="${version_dir%-bin.zip}"
+
+  if [[ -x "${version_dir}/bin/gradle" ]]; then
+    export GRADLE="${version_dir}/bin/gradle"
+    echo "Using cached Gradle at ${GRADLE}."
+    return
+  fi
+
+  mkdir -p "${PACKAGE_CACHE}"
+  "${SCRIPT_DIR}/scripts/download-file.sh" "${url}" "${archive}"
+  "${SCRIPT_DIR}/scripts/check-sha256.sh" "${checksum}" "${archive}"
+  if [[ ! -x "${version_dir}/bin/gradle" ]]; then
+    echo "Extracting ${archive##*/} in ${PACKAGE_CACHE}..."
+    unzip -q -o "${archive}" -d "${PACKAGE_CACHE}"
+  fi
+  export GRADLE="${version_dir}/bin/gradle"
+}
+
 install_required_packages() {
   install_host_packages
+  configure_build_cache
+  install_gradle
   install_sdk
 }
 
@@ -153,12 +199,17 @@ build_apk() {
     output="${PWD}/${output}"
   fi
 
+  configure_build_cache
   mkdir -p -- "$(dirname -- "${output}")"
   configure_java || {
     echo "Java is missing. Run ./build-apk.sh and choose option 1 first." >&2
     return 1
   }
   require_sdk
+  if [[ -z "${GRADLE:-}" || ! -x "${GRADLE}" ]]; then
+    echo "Gradle is not installed in ${PACKAGE_CACHE}. Run menu option 1 first." >&2
+    return 1
+  fi
 
   echo "Building MeWeVPN APK..."
   make -C "${SCRIPT_DIR}" apk
@@ -167,10 +218,13 @@ build_apk() {
 }
 
 show_environment() {
+  configure_build_cache
   configure_android_sdk
   printf 'Repository:       %s\n' "${SCRIPT_DIR}"
   printf 'Android SDK:      %s\n' "${ANDROID_SDK_ROOT}"
   printf 'Default APK:      %s\n' "${DEFAULT_OUTPUT}"
+  printf 'Package cache:    %s\n' "${PACKAGE_CACHE}"
+  printf 'Gradle:           %s\n' "${GRADLE:-not installed}"
   if configure_java; then
     printf 'Java home:        %s\n' "${JAVA_HOME}"
   else
@@ -191,10 +245,11 @@ MeWeVPN APK Builder
   1) Install required packages (Java + Android SDK/NDK)
   2) Make the APK
   3) Show build environment
-  4) Clean build artifacts
-  5) Exit
+  4) Clean build artifacts (keep downloaded packages)
+  5) Delete downloaded package cache
+  6) Exit
 MENU
-    read -r -p 'Select an option [1-5]: ' choice
+    read -r -p 'Select an option [1-6]: ' choice
     case "${choice}" in
       1) install_required_packages ;;
       2)
@@ -203,7 +258,8 @@ MENU
         ;;
       3) show_environment ;;
       4) make -C "${SCRIPT_DIR}" clean ;;
-      5) return ;;
+      5) rm -rf -- "${PACKAGE_CACHE}"; echo "Deleted ${PACKAGE_CACHE}" ;;
+      6) return ;;
       *) echo "Invalid selection: ${choice}" >&2 ;;
     esac
   done
