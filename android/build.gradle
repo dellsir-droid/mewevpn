@@ -199,7 +199,11 @@ def getVersionProperty(key) {
     //      make tailscale.version
     def versionProps = new Properties()
     versionProps.load(project.file('../tailscale.version').newDataInputStream())
-    return versionProps.getProperty(key).replaceAll('^"|"$', '')
+    def value = versionProps.getProperty(key)
+    if (value == null) {
+        throw new GradleException("Missing ${key} in tailscale.version; run make version to regenerate it")
+    }
+    return value.replaceAll('^"|"$', '')
 }
 
 def computeVersionCode() {

@@ -147,6 +147,8 @@ Downloaded Gradle, Go modules, and the pinned Go toolchain are stored under the
 Git-ignored `./tmp/package` directory. Successful downloads and extracted
 Gradle distributions are reused by later builds. Menu option 4 cleans build
 outputs without removing this cache; option 5 explicitly deletes the cache.
+The build also detects and regenerates an empty or interrupted
+`tailscale.version` file before starting Gradle.
 
 For one-shot commands without entering an interactive shell:
 

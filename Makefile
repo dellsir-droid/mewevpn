@@ -194,10 +194,19 @@ tailscale-test.apk: version gradle-dependencies
 MKVERSION := ./tool/go run tailscale.com/cmd/mkversion
 
 tailscale.version: go.mod go.sum go.toolchain.rev $(wildcard .git/HEAD)
-	@bash -c "$(MKVERSION) > tailscale.version"
+	@rm -f tailscale.version.tmp
+	@bash -c "$(MKVERSION) > tailscale.version.tmp"
+	@grep -q '^VERSION_LONG=' tailscale.version.tmp || \
+		{ echo "ERROR: mkversion did not produce VERSION_LONG" >&2; rm -f tailscale.version.tmp; exit 1; }
+	@mv tailscale.version.tmp tailscale.version
 
 .PHONY: version
 version: tailscale.version
+	@if ! grep -q '^VERSION_LONG=' tailscale.version; then \
+		echo "Regenerating incomplete tailscale.version..."; \
+		rm -f tailscale.version; \
+		$(MAKE) tailscale.version; \
+	fi
 	@cat tailscale.version
 
 # ------------------------------------------------------------------------------
