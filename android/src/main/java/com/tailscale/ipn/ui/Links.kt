@@ -3,9 +3,10 @@
 
 package com.tailscale.ipn.ui
 
+import com.tailscale.ipn.MWeConfig
+
 object Links {
-  const val DEFAULT_CONTROL_URL = "https://controlplane.tailscale.com"
-  const val SERVER_URL = "https://login.tailscale.com"
+  const val SERVER_URL = MWeConfig.CONTROL_URL
   const val ADMIN_URL = SERVER_URL + "/admin"
   const val SIGNIN_URL = "https://tailscale.com/login"
   const val PRIVACY_POLICY_URL = "https://tailscale.com/privacy-policy/"

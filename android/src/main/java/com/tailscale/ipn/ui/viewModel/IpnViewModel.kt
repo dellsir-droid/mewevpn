@@ -5,6 +5,7 @@ package com.tailscale.ipn.ui.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tailscale.ipn.MWeConfig
 import com.tailscale.ipn.UninitializedApp
 import com.tailscale.ipn.mdm.MDMSettings
 import com.tailscale.ipn.ui.localapi.Client
@@ -171,6 +172,9 @@ open class IpnViewModel : ViewModel() {
     val client = Client(viewModelScope)
 
     val finalMaskedPrefs = maskedPrefs?.deepCopy() ?: Ipn.MaskedPrefs()
+    // This distribution is dedicated to M-WE. Always pin login to Headscale so an empty, stale,
+    // or caller-provided preference can never fall back to Tailscale's public control plane.
+    finalMaskedPrefs.ControlURL = MWeConfig.CONTROL_URL
     // Don't set WantRunning=true here. Setting it in editPrefs() triggers cc.Login(LoginDefault)
     // in the Go backend on the existing control client; when the user taps "Log in," login() calls
     // start(), which triggers resetControlClientLocked(), cancelling the existing control client
@@ -216,15 +220,6 @@ open class IpnViewModel : ViewModel() {
     val prefs = Ipn.MaskedPrefs()
     prefs.WantRunning = true
     login(prefs, authKey = authKey, completionHandler)
-  }
-
-  fun loginWithCustomControlURL(
-      controlURL: String,
-      completionHandler: (Result<Unit>) -> Unit = {}
-  ) {
-    val prefs = Ipn.MaskedPrefs()
-    prefs.ControlURL = controlURL
-    login(prefs, completionHandler = completionHandler)
   }
 
   fun logout(completionHandler: (Result<String>) -> Unit = {}) {

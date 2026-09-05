@@ -3,6 +3,7 @@
 
 package com.tailscale.ipn.ui.model
 
+import com.tailscale.ipn.MWeConfig
 import java.net.URL
 import kotlinx.serialization.Serializable
 
@@ -142,7 +143,7 @@ class IpnLocal {
 
     // Returns true if the profile uses a custom control server (not Tailscale SaaS).
     private fun isUsingCustomControlServer(): Boolean {
-      return ControlURL != null && ControlURL != "https://controlplane.tailscale.com"
+      return ControlURL != null && ControlURL != MWeConfig.CONTROL_URL
     }
 
     // Returns the hostname of the custom control server, if any was set.

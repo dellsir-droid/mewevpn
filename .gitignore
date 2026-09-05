@@ -3,6 +3,7 @@
 
 # Ignore Gradle build output directory
 build
+/tmp/
 
 # The destination for the Go Android archive.
 android/libs

@@ -19,6 +19,7 @@ DOCKER_IMAGE := tailscale-android-build-amd64-072226-3
 # tailscale-android-integration-amd64-YYYYMMDD-N
 ANDROID_INTEGRATION_DOCKER_IMAGE := tailscale-android-integration-amd64-20260609-1
 export TS_USE_TOOLCHAIN=1
+GRADLE ?= ./gradlew
 
 # If set, additional comma-separated build tags passed to the libtailscale Go
 # build to control feature selection.
@@ -60,10 +61,10 @@ ABS_UNSTRIPPED_AAR := $(shell pwd)/$(UNSTRIPPED_AAR)
 # Android SDK & Tools settings.
 ifeq ($(shell uname),Linux)
     ANDROID_TOOLS_URL := "https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip"
-    ANDROID_TOOLS_SUM := "bd1aa17c7ef10066949c88dc6c9c8d536be27f992a1f3b5a584f9bd2ba5646a0  commandlinetools-linux-9477386_latest.zip"
+    ANDROID_TOOLS_SHA256 := bd1aa17c7ef10066949c88dc6c9c8d536be27f992a1f3b5a584f9bd2ba5646a0
 else
     ANDROID_TOOLS_URL := "https://dl.google.com/android/repository/commandlinetools-mac-9477386_latest.zip"
-    ANDROID_TOOLS_SUM := "2072ffce4f54cdc0e6d2074d2f381e7e579b7d63e915c220b96a7db95b2900ee  commandlinetools-mac-9477386_latest.zip"
+    ANDROID_TOOLS_SHA256 := 2072ffce4f54cdc0e6d2074d2f381e7e579b7d63e915c220b96a7db95b2900ee
 endif
 ANDROID_SDK_PACKAGES := 'platforms;android-$(ANDROID_API_LEVEL)' 'extras;android;m2repository' 'ndk;23.1.7779620' 'platform-tools' 'build-tools;$(ANDROID_BUILD_TOOLS_VERSION)'
 
@@ -152,7 +153,7 @@ apk: $(DEBUG_APK)
 tailscale-debug: $(DEBUG_APK)
 
 $(DEBUG_APK): libtailscale debug-symbols version gradle-dependencies build-unstripped-aar
-	(cd android && ./gradlew test assembleDebug)
+	(cd android && $(GRADLE) test assembleDebug)
 	install -C android/build/outputs/apk/debug/android-debug.apk $@
 
 # Builds the release AAB and signs it (phone/tablet/chromeOS variant)
@@ -171,7 +172,7 @@ gradle-dependencies: $(shell find android -type f -not -path "android/build/*" -
 
 $(RELEASE_AAB): version gradle-dependencies
 	@echo "Building release AAB"
-	(cd android && ./gradlew test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE))
+	(cd android && $(GRADLE) test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE))
 	install -C ./android/build/outputs/bundle/release/android-release.aab $@
 
 # PLATFORM=tv signals to Gradle that we should build for AndroidTV. Gradle
@@ -179,11 +180,11 @@ $(RELEASE_AAB): version gradle-dependencies
 # builds use ...0 and TV builds use ...1.
 $(RELEASE_TV_AAB): version gradle-dependencies
 	@echo "Building TV release AAB"
-	(cd android && ./gradlew test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE) -PPLATFORM=tv)
+	(cd android && $(GRADLE) test bundleRelease -PVERSION_CODE_BASE=$(VERSION_CODE_BASE) -PPLATFORM=tv)
 	install -C ./android/build/outputs/bundle/release/android-release.aab $@
 
 tailscale-test.apk: version gradle-dependencies
-	(cd android && ./gradlew assembleApplicationTestAndroidTest)
+	(cd android && $(GRADLE) assembleApplicationTestAndroidTest)
 	install -C ./android/build/outputs/apk/androidTest/applicationTest/android-applicationTest-androidTest.apk $@
 
 # Command that (re)generates tailscale.version from the current git HEAD and
@@ -193,10 +194,21 @@ tailscale-test.apk: version gradle-dependencies
 MKVERSION := ./tool/go run tailscale.com/cmd/mkversion
 
 tailscale.version: go.mod go.sum go.toolchain.rev $(wildcard .git/HEAD)
-	@bash -c "$(MKVERSION) > tailscale.version"
+	@rm -f tailscale.version.tmp
+	@bash -c "$(MKVERSION) > tailscale.version.tmp"
+	@{ head -n 1 tailscale.version.tmp | grep -q '^VERSION_MAJOR='; } && \
+		grep -q '^VERSION_LONG=' tailscale.version.tmp || \
+		{ echo "ERROR: mkversion produced invalid version metadata" >&2; rm -f tailscale.version.tmp; exit 1; }
+	@mv tailscale.version.tmp tailscale.version
 
 .PHONY: version
 version: tailscale.version
+	@if ! { head -n 1 tailscale.version | grep -q '^VERSION_MAJOR=' && \
+		grep -q '^VERSION_LONG=' tailscale.version; }; then \
+		echo "Regenerating incomplete tailscale.version..."; \
+		rm -f tailscale.version; \
+		$(MAKE) tailscale.version; \
+	fi
 	@cat tailscale.version
 
 # ------------------------------------------------------------------------------
@@ -328,24 +340,24 @@ $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager:
 	mkdir -p $(ANDROID_HOME)/tmp
 	mkdir -p $(ANDROID_HOME)/cmdline-tools
 	(cd $(ANDROID_HOME)/tmp && \
-		curl --silent -O -L $(ANDROID_TOOLS_URL) && \
-		echo $(ANDROID_TOOLS_SUM) | shasum -c - && \
+		$(CURDIR)/scripts/download-file.sh $(ANDROID_TOOLS_URL) $(shell basename $(ANDROID_TOOLS_URL)) && \
+		$(CURDIR)/scripts/check-sha256.sh $(ANDROID_TOOLS_SHA256) $(shell basename $(ANDROID_TOOLS_URL)) && \
 		unzip $(shell basename $(ANDROID_TOOLS_URL)))
 	mv $(ANDROID_HOME)/tmp/cmdline-tools $(ANDROID_HOME)/cmdline-tools/latest
 	rm -rf $(ANDROID_HOME)/tmp
 
 .PHONY: androidsdk
 androidsdk: $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager ## Install the set of Android SDK packages we need.
-	yes | $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null
-	$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --update
-	$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager $(ANDROID_SDK_PACKAGES)
+	yes | $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --sdk_root=$(ANDROID_HOME) --licenses
+	$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --sdk_root=$(ANDROID_HOME) $(ANDROID_SDK_PACKAGES)
 
 # Normally in make you would simply take a dependency on the task that provides
 # the binaries, however users may have a decision to make as to whether they
 # want to install an SDK or use the one from an Android Studio installation.
 .PHONY: checkandroidsdk
 checkandroidsdk: ## Check that Android SDK is installed
-	@$(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager --list_installed | grep -q 'ndk' || (\
+	@test -x $(ANDROID_HOME)/cmdline-tools/latest/bin/sdkmanager && \
+		test -d $(ANDROID_HOME)/ndk/23.1.7779620 || (\
 		echo -e "\n\tERROR: Android SDK not installed.\n\
 		\tANDROID_HOME=$(ANDROID_HOME)\n\
 		\tANDROID_SDK_ROOT=$(ANDROID_SDK_ROOT)\n\n\
@@ -357,15 +369,15 @@ checkandroidsdk: ## Check that Android SDK is installed
 
 .PHONY: test
 test: gradle-dependencies ## Run the Android tests
-	(cd android && ./gradlew test)
+	(cd android && $(GRADLE) test)
 
 .PHONY: fmt
 fmt: gradle-dependencies ## Format the Android code
-	(cd android && ./gradlew ktfmtFormat)
+	(cd android && $(GRADLE) ktfmtFormat)
 
 .PHONY: fmt-check
 fmt-check: gradle-dependencies ## Check the Android code is formatted
-	(cd android && ./gradlew ktfmtCheck)
+	(cd android && $(GRADLE) ktfmtCheck)
 
 .PHONY: emulator
 emulator: ## Start an android emulator instance

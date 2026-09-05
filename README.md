@@ -1,4 +1,15 @@
-# Tailscale Android Client
+# MeWeVPN Android Client
+
+> **M-WE distribution:** This branch builds **MeWeVPN** (`org.mwe.vpn`; Android application IDs cannot contain hyphens), a private-network
+> Android client pinned to the M-WE Headscale control server at `https://hs.m-we.org`. Interactive
+> authentication begins at Headscale; Headscale must be configured to use the OpenID Connect issuer
+> `https://oidc.m-we.org`. The Android client does not handle the OIDC client secret and must never
+> embed it. The upstream Tailscale networking implementation and BSD-3-Clause licensing remain
+> intact.
+>
+> The control URL is enforced both in the Android login flow and as a backend device policy. The
+> browser first contacts Headscale; Headscale is responsible for redirecting it to the configured
+> OIDC issuer. If the browser does not reach `oidc.m-we.org`, verify Headscale's OIDC configuration.
 
 https://tailscale.com
 
@@ -109,6 +120,50 @@ make tailscale-debug
 ```
 
 The debug APK is written to `./tailscale-debug.apk`.
+
+To replace the launcher and in-app logo, place a PNG at `tmp/mewevpn.png`
+and run the logo menu:
+
+```shell
+./change-logo.sh
+```
+
+Choose option 1 to install ImageMagick, option 2 to select a different PNG if
+needed, and option 3 to generate and replace every Android logo density, the
+Play Store icon, and the Android TV banner.
+
+For the M-WE distribution, run the interactive builder:
+
+```shell
+./build-apk.sh
+```
+
+Choose **1) Install required packages** once. This installs a compatible JDK and
+host utilities through the detected package manager, then installs the Android
+SDK/NDK. Choose **2) Make the APK** afterward. The APK option asks for an output
+path (default `./tmp/MeWeVPN-debug.apk`) and builds the complete APK, including
+`libtailscale`. When a system SDK is incomplete (for example, it has no `sdkmanager`), the script installs and reuses
+an ignored repo-local SDK at `./android-sdk`.
+
+For non-interactive use, install the packages and build in separate commands:
+
+```shell
+./build-apk.sh install
+./build-apk.sh build out/MeWeVPN.apk
+```
+
+The older `./build-apk.sh out/MeWeVPN.apk` form remains supported. The first
+build also downloads the pinned Tailscale Go toolchain (currently roughly 60
+MB). Android and Go package downloads retain partial files and resume them in a
+new connection after interruptions. The retry count and delay can be adjusted
+with `DOWNLOAD_MAX_ATTEMPTS` and `DOWNLOAD_RETRY_DELAY`.
+
+Downloaded Gradle, Go modules, and the pinned Go toolchain are stored under the
+Git-ignored `./tmp/package` directory. Successful downloads and extracted
+Gradle distributions are reused by later builds. Menu option 4 cleans build
+outputs without removing this cache; option 5 explicitly deletes the cache.
+The build also detects and regenerates an empty or interrupted
+`tailscale.version` file before starting Gradle.
 
 For one-shot commands without entering an interactive shell:
 

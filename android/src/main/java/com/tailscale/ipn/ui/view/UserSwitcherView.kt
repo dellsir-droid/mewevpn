@@ -49,7 +49,6 @@ import com.tailscale.ipn.ui.viewModel.UserSwitcherViewModel
 data class UserSwitcherNav(
     val backToSettings: BackNavigation,
     val onNavigateHome: () -> Unit,
-    val onNavigateCustomControl: () -> Unit,
     val onNavigateToAuthKey: () -> Unit
 )
 
@@ -74,8 +73,7 @@ fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = vi
               Row {
                 FusMenu(
                     viewModel = viewModel,
-                    onAuthKeyClick = nav.onNavigateToAuthKey,
-                    onCustomClick = nav.onNavigateCustomControl)
+                    onAuthKeyClick = nav.onNavigateToAuthKey)
                 IconButton(onClick = { viewModel.showHeaderMenu.set(!showHeaderMenu) }) {
                   Icon(Icons.Default.MoreVert, "menu")
                 }
@@ -194,7 +192,6 @@ fun UserSwitcherView(nav: UserSwitcherNav, viewModel: UserSwitcherViewModel = vi
 
 @Composable
 fun FusMenu(
-    onCustomClick: () -> Unit,
     onAuthKeyClick: () -> Unit,
     viewModel: UserSwitcherViewModel
 ) {
@@ -204,12 +201,6 @@ fun FusMenu(
       expanded = expanded,
       onDismissRequest = { viewModel.showHeaderMenu.set(false) },
       modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)) {
-        MenuItem(
-            onClick = {
-              onCustomClick()
-              viewModel.showHeaderMenu.set(false)
-            },
-            text = stringResource(id = R.string.custom_control_menu))
         MenuItem(
             onClick = {
               onAuthKeyClick()
@@ -259,7 +250,6 @@ fun UserSwitcherViewPreview() {
       UserSwitcherNav(
           backToSettings = {},
           onNavigateHome = {},
-          onNavigateCustomControl = {},
           onNavigateToAuthKey = {})
   UserSwitcherView(nav, vm)
 }
