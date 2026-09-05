@@ -25,7 +25,7 @@ fi
 mkdir -p -- "$(dirname -- "${output}")"
 
 for ((attempt = 1; attempt <= max_attempts; attempt++)); do
-  echo "Download attempt ${attempt}/${max_attempts}: ${url}"
+  echo "Download attempt ${attempt}/${max_attempts}: ${url}" >&2
   if curl --http1.1 \
       --fail --location \
       --continue-at - \
