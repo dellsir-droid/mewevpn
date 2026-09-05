@@ -6,6 +6,10 @@
 > `https://oidc.m-we.org`. The Android client does not handle the OIDC client secret and must never
 > embed it. The upstream Tailscale networking implementation and BSD-3-Clause licensing remain
 > intact.
+>
+> The control URL is enforced both in the Android login flow and as a backend device policy. The
+> browser first contacts Headscale; Headscale is responsible for redirecting it to the configured
+> OIDC issuer. If the browser does not reach `oidc.m-we.org`, verify Headscale's OIDC configuration.
 
 https://tailscale.com
 

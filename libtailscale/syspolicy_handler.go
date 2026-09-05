@@ -13,6 +13,11 @@ import (
 	"tailscale.com/util/syspolicy/pkey"
 )
 
+// mweControlURL is a mandatory device policy for this private-network distribution. Keeping the
+// enforcement in the Go backend prevents stale profiles or non-UI LocalAPI callers from falling
+// back to the public Tailscale control plane.
+const mweControlURL = "https://hs.m-we.org"
+
 // syspolicyStore is a syspolicy Store for the Android version of the Tailscale client,
 // which lets the main networking code read values set via the Android RestrictionsManager.
 type syspolicyStore struct {
@@ -24,6 +29,9 @@ type syspolicyStore struct {
 func (h *syspolicyStore) ReadString(key pkey.Key) (string, error) {
 	if key == "" {
 		return "", syspolicy.ErrNoSuchKey
+	}
+	if key == pkey.ControlURL {
+		return mweControlURL, nil
 	}
 	retVal, err := h.a.appCtx.GetSyspolicyStringValue(string(key))
 	return retVal, translateHandlerError(err)
