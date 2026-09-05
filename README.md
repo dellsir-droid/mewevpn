@@ -121,6 +121,17 @@ make tailscale-debug
 
 The debug APK is written to `./tailscale-debug.apk`.
 
+To replace the launcher and in-app logo, place a PNG at `tmp/mewevpn.png`
+and run the logo menu:
+
+```shell
+./change-logo.sh
+```
+
+Choose option 1 to install ImageMagick, option 2 to select a different PNG if
+needed, and option 3 to generate and replace every Android logo density, the
+Play Store icon, and the Android TV banner.
+
 For the M-WE distribution, run the interactive builder:
 
 ```shell
@@ -130,8 +141,8 @@ For the M-WE distribution, run the interactive builder:
 Choose **1) Install required packages** once. This installs a compatible JDK and
 host utilities through the detected package manager, then installs the Android
 SDK/NDK. Choose **2) Make the APK** afterward. The APK option asks for an output
-path (default `./tmp/MeWeVPN-debug.apk`) and builds the complete APK, including `libtailscale`. When a system SDK is
-incomplete (for example, it has no `sdkmanager`), the script installs and reuses
+path (default `./tmp/MeWeVPN-debug.apk`) and builds the complete APK, including
+`libtailscale`. When a system SDK is incomplete (for example, it has no `sdkmanager`), the script installs and reuses
 an ignored repo-local SDK at `./android-sdk`.
 
 For non-interactive use, install the packages and build in separate commands:
