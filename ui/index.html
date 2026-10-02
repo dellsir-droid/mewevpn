@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'" />
+  <title>MeWeTail</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="brand" id="brand" href="https://m-we.org" target="_blank" rel="noopener" title="m-we.org">
+      <img src="img/app-icon.png" alt="" class="brand__logo" />
+      <span><b class="brand__name">MeWeTail</b><small data-i18n="tagline">Private network for your devices</small></span>
+    </a>
+    <div class="top__right">
+      <button class="pill" id="langBtn" type="button" aria-label="Language">EN</button>
+      <button class="pill" id="themeBtn" type="button" aria-label="Theme">☀️</button>
+      <div class="user" id="user"></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card hero" id="hero">
+      <div class="hero__state">
+        <span class="dot" id="dot"></span>
+        <div>
+          <h1 id="stateTitle">…</h1>
+          <p id="stateText" class="muted"></p>
+        </div>
+      </div>
+      <div class="hero__actions" id="actions"></div>
+      <p class="err" id="err" hidden></p>
+    </section>
+
+    <section class="card" id="selfCard" hidden>
+      <h2 data-i18n="thisDevice">This device</h2>
+      <div class="row"><span id="selfName"></span><button class="link" id="selfIp" type="button" title="Copy"></button></div>
+    </section>
+
+    <section class="card" id="exitCard" hidden>
+      <h2 data-i18n="exitNode">Exit node</h2>
+      <p class="muted" data-i18n="exitHelp">Send all internet traffic through one of your devices.</p>
+      <select id="exitSel"></select>
+    </section>
+
+    <section class="card" id="peersCard" hidden>
+      <h2><span data-i18n="devices">Devices</span> <small class="muted" id="peerCount"></small></h2>
+      <ul class="peers" id="peers"></ul>
+    </section>
+
+    <section class="card" id="modeCard">
+      <h2 data-i18n="connection">Connection</h2>
+      <p class="muted" id="modeText"></p>
+      <div class="hero__actions" id="modeActions"></div>
+    </section>
+
+    <section class="card" id="serverCard">
+      <h2 data-i18n="server">Server</h2>
+      <p class="muted" data-i18n="serverHelp">Sign-in uses the server's single sign-on (oidc.m-we.org).</p>
+      <div class="row">
+        <input id="serverInput" type="url" spellcheck="false" />
+        <button class="btn btn--ghost" id="serverSave" type="button" data-i18n="save">Save</button>
+        <button class="btn btn--ghost" id="serverReset" type="button" data-i18n="reset">Default</button>
+      </div>
+    </section>
+
+    <p class="foot muted" style="grid-column:1/-1"><a href="https://m-we.org" target="_blank" rel="noopener">m-we.org</a> · <span id="version"></span></p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

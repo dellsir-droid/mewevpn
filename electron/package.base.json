@@ -1,0 +1,49 @@
+{
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "auth.js",
+      "app.config.json",
+      "offline.html",
+      "www/**"
+    ],
+    "linux": {
+      "executableName": "app",
+      "icon": "build/icons",
+      "maintainer": "MeWe <dg9999@gmail.com>",
+      "target": [
+        "AppImage",
+        "deb",
+        "tar.gz"
+      ],
+      "artifactName": "${productName}-${version}.${ext}"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-${version}.${ext}"
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "hardenedRuntime": false,
+      "artifactName": "${productName}-${version}.${ext}"
+    },
+    "artifactName": "${productName}-${version}.${ext}",
+    "nsis": {
+      "artifactName": "${productName}-${version}.${ext}"
+    }
+  }
+}

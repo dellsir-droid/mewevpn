@@ -1,0 +1,6 @@
+{
+  "files": ["build/icon.png"],
+  "extraResources": [
+    { "from": "bin/${os}", "to": "bin" }
+  ]
+}
