@@ -11,7 +11,9 @@ TOOLS_PLATFORM=android
 # shellcheck source=../scripts/common.sh
 source "$ROOT_DIR/../scripts/common.sh"
 : "${ANDROID_EXPORT_DIR:=$SYNC_ROOT/android/$EXPORT_SUB}"
-: "${USE_DOCKER:=1}"           # 0 = build with the Android SDK/NDK/Go on this machine instead (make tailscale-debug)
+: "${USE_DOCKER:=auto}"        # auto = Docker if installed, else this machine's JDK + Android SDK/NDK + Go; 1 = always Docker; 0 = never (make tailscale-debug)
+# Docker is only upstream's way to get the exact SDK/NDK/Go toolchain without installing it. It is not required.
+if [[ "$USE_DOCKER" == auto ]]; then if command -v docker >/dev/null 2>&1; then USE_DOCKER=1; else USE_DOCKER=0; fi; fi
 : "${ICON_BG_COLOR:=#FFFFFF}"  # behind the adaptive-icon foreground
 RES="$ROOT_DIR/android/src/main/res"
 
@@ -51,6 +53,8 @@ action_icons() {
   need_icon_tools && find_icon_src || return 1
   local src="$ICON_FOUND" d size
   local bundled=0; [[ "$src" == "$REPO_DIR/design/"* ]] && bundled=1
+  # The bundled icon is drawn with Node: fetch a private Node if there is none (no sudo). Never report [ok] when nothing was made.
+  if [[ $bundled == 1 || -z "$(convert_bin)" ]] && ! have node; then ensure_node || { err "Node.js (or ImageMagick) is needed to make icons. The icons already in the repo are unchanged."; return 1; }; fi
   if [[ -z "$(convert_bin)" && $bundled == 0 ]]; then warn "ImageMagick is needed to use your own PNG ($src): using the bundled icon instead."; bundled=1; fi
   # legacy launcher icons (square + round)
   for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
@@ -119,13 +123,13 @@ print_menu() {
   cat <<MENU
 
 ${BOLD}$APP_NAME Android app ($(date +%Y-%m-%d))${RESET}   default server $CONTROL_URL
-  1) Install tools (build the Docker image once)
+  1) Install tools ($([[ "$USE_DOCKER" == 1 ]] && echo "build the Docker image once" || echo "Android SDK/NDK on this machine; needs JDK 17+ and Go"))
   2) Make icons from PNG (default $ICON_SRC; you can type another)
   3) Make the app (APK) -> $ANDROID_EXPORT_DIR
   4) Make the signed release bundle (AAB, needs JKS_PATH + JKS_PASSWORD)
   5) Show build environment
   6) Clean build outputs
-  7) Remove the Docker build image
+  7) Remove the Docker build image (Docker mode only)
   q) Quit
 MENU
 }

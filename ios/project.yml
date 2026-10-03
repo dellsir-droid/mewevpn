@@ -1,0 +1,36 @@
+# XcodeGen spec (https://github.com/yonaskolb/XcodeGen): `xcodegen generate` makes the .xcodeproj. build.sh does that for you and exports the
+# ${VARS} below from scripts/app.conf, so this file is the same in every mewe* repo.
+name: ${APP_PROJECT}
+options:
+  bundleIdPrefix: org.m-we
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  ${APP_PROJECT}:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Assets.xcassets            # AppIcon (made by build.sh option 2)
+        optional: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ${APP_IOS_ID}
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ${APP_NAME}
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        DEVELOPMENT_TEAM: ""                # set DEVELOPMENT_TEAM in the environment (or in Xcode) to sign for a device
+    info:
+      path: Info.plist
+      properties:
+        MeweControlURL: "https://hs.m-we.org"
+        MeweOidcIssuer: "https://oidc.m-we.org/realms/mwe"
